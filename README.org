@@ -2,6 +2,8 @@
 
 Various Nix utility scripts for my nix computers.
 
+This is a sandbox for personal stuff, I make zero guarantees about any API or anything. I will try not to force push any existing commits, so if you want to use something, pin the specific revision in your flake’s inputs and you should be fine.
+
 * Battery Control for Mac (Intel and Apple Sillicon)
 
 Use the =battery-control= nix-darwin module to control the maximum charge of

@@ -311,5 +311,34 @@
           };
         };
     };
+    lib = {
+      # Wrap a binary in a trampoline script that gets envvars by running a
+      # command. Use this with a key store like keychain or 1p to transparently get
+      # secrets for an interactive command. Compare this to a baked-in aws-vault
+      # exec.
+      env-trampoline = {
+        drv
+      , name ? drv.name
+      , env ? {}
+      # Convenience wrapper for env which fetches keys from 1password
+      , _1password ? {}
+      , pkgs
+      }: with pkgs; let
+        env' = env // lib.mapAttrs (_: value: "${lib.getExe pkgs._1password} read ${lib.escapeShellArg value}") _1password;
+        # Separate line for reading the variable and exporting it as an envvar
+        # because that’s required to make bash detect failure of the command
+        # substitution and bubble it up to the script itself for set -e to work as
+        # intended.
+        exports = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: ''
+          ${name}="$(${value})"
+          export ${name}
+        '') env');
+      in writeScriptBin name ''
+        #! ${runtimeShell}
+        set -euo pipefail
+        ${exports}
+        exec ${lib.escapeShellArg (lib.getExe drv)} "$@"
+      '';
+    };
   };
 }
