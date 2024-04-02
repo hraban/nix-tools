@@ -15,13 +15,20 @@
 {
   inputs = {
     cl-nix-lite.url = "github:hraban/cl-nix-lite";
+    systems.url = "systems";
+    flake-utils = {
+      url = "flake-utils";
+      inputs.systems.follows = "systems";
+    };
   };
 
   outputs = {
     self
-    , nixpkgs
-    , flake-utils
-    , cl-nix-lite
+  , nixpkgs
+  , flake-utils
+  , cl-nix-lite
+  , systems
+  , ...
   }: let
     recursiveMergeAttrs = builtins.foldl' nixpkgs.lib.recursiveUpdate {};
   in {
@@ -316,6 +323,23 @@
             };
           };
       }
+      (nixpkgs.lib.genAttrs (import systems) (system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        # Like nix-collect-garbage --delete-older-than 30d, but doesn’t delete
+        # anything that was _added_ to the store in the last 30 days. Creates a
+        # fresh GC root for those paths in /nix/var/nix/gcroots/rotating, from
+        # where stale entries are only cleared out the next time you run this
+        # again.
+        nix-collect-old-garbage = pkgs.writeShellApplication {
+          name = "nix-collect-old-garbage";
+          runtimeInputs = with pkgs; [ sqlite findutils nix ];
+          text = builtins.readFile ./nix-collect-old-garbage.sh;
+          derivationArgs = {
+            meta.license = pkgs.lib.licenses.agpl3Only;
+          };
+        };
+      }))
     ];
     lib = {
       # Wrap a binary in a trampoline script that gets envvars by running a
