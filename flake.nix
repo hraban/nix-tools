@@ -148,6 +148,21 @@
           }))
         ];
       };
+      # This is my repo I’ll configure it however I want to.
+      nix-collect-old-garbage = { lib, pkgs, config, ... }: {
+        launchd.daemons.nix-collect-old-garbage = {
+          serviceConfig = {
+            ProgramArguments = [
+              (lib.getExe self.packages.${pkgs.system}.nix-collect-old-garbage)
+            ];
+            RunAtLoad = true;
+            StartCalendarInterval = [ {
+              Hour = 11;
+              Minute = 11;
+            } ];
+          };
+        };
+      };
     };
     nixosModules = {
       # Don’t use this.
