@@ -22,7 +22,9 @@
     , nixpkgs
     , flake-utils
     , cl-nix-lite
-  }: {
+  }: let
+    recursiveMergeAttrs = builtins.foldl' nixpkgs.lib.recursiveUpdate {};
+  in {
     # Module to allow darwin hosts to get the timezone name as a string without
     # a password. Insanity but ok. Separate module because it affects different
     # parts of the system and I want all that code grouped together.
@@ -190,127 +192,131 @@
         };
       };
     };
-    packages = nixpkgs.lib.recursiveUpdate (nixpkgs.lib.genAttrs (with flake-utils.lib.system; [ x86_64-darwin aarch64-darwin ]) (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system}.extend cl-nix-lite.overlays.default;
-        lpl = pkgs.lispPackagesLite;
-      in {
-        # Darwin-only because of ‘say’
-        alarm = with lpl; lispScript {
-          name = "alarm";
-          src = ./alarm.lisp;
-          dependencies = [
-            arrow-macros
-            f-underscore
-            inferior-shell
-            local-time
-            trivia
-            lpl."trivia.ppcre"
-          ];
-          installCheckPhase = ''
-            $out/bin/alarm --help
-          '';
-          doInstallCheck = true;
-        };
-      }
-    )) {
-      x86_64-darwin =
+    # Jesus what a mess.
+    packages = recursiveMergeAttrs [
+      (nixpkgs.lib.genAttrs (with flake-utils.lib.system; [ x86_64-darwin aarch64-darwin ]) (system:
         let
-          pkgs = nixpkgs.legacyPackages.x86_64-darwin.extend cl-nix-lite.overlays.default;
+          pkgs = nixpkgs.legacyPackages.${system}.extend cl-nix-lite.overlays.default;
           lpl = pkgs.lispPackagesLite;
         in {
-          bclm = pkgs.stdenv.mkDerivation {
-            name = "bclm";
-            # There’s a copy of this binary included locally en cas de coup dur
-            src = pkgs.fetchzip {
-              url = "https://github.com/zackelia/bclm/releases/download/v0.0.4/bclm.zip";
-              hash = "sha256-3sQhszO+MRLGF5/dm1mFXQZu/MxK3nw68HTpc3cEBOA=";
-            };
-            installPhase = ''
-              mkdir -p $out/bin/
-              cp bclm $out/bin/
-            '';
-            dontFixup = true;
-            meta = {
-              platforms = [ "x86_64-darwin" ];
-              license = pkgs.lib.licenses.mit;
-              sourceProvenance = [ pkgs.lib.sourceTypes.binaryNativeCode ];
-              downloadPage = "https://github.com/zackelia/bclm/releases";
-              mainProgram = "bclm";
-            };
-          };
-          xbar-battery-plugin = let
-            bclm = pkgs.lib.getExe self.packages.x86_64-darwin.bclm;
-          in with lpl; lispScript {
-            name = "battery.30s.lisp";
-            src = ./battery.30s.lisp;
+          # Darwin-only because of ‘say’
+          alarm = with lpl; lispScript {
+            name = "alarm";
+            src = ./alarm.lisp;
             dependencies = [
               arrow-macros
-              cl-interpol
+              f-underscore
               inferior-shell
+              local-time
               trivia
+              lpl."trivia.ppcre"
             ];
-            inherit bclm;
-            passthru.sudo-binaries = [ bclm ];
-            postInstall = ''
-              export self="$out/bin/$name"
-              substituteAllInPlace "$self"
+            installCheckPhase = ''
+              $out/bin/alarm --help
             '';
+            doInstallCheck = true;
           };
-        };
-      aarch64-darwin =
-        let
-          pkgs = nixpkgs.legacyPackages.aarch64-darwin.extend cl-nix-lite.overlays.default;
-          lpl = pkgs.lispPackagesLite;
-        in {
-          smc = pkgs.stdenvNoCC.mkDerivation {
-            name = "smc";
-            dontUnpack = true;
-            dontPatch = true;
-            # I kinda forgot where I got this binary...?
-            installPhase = ''
-              mkdir -p $out/bin
-              cp ${./smc} $out/bin/smc
-            '';
-            meta = {
-              mainProgram = "smc";
-              platforms = [ "aarch64-darwin" ];
-              sourceProvenance = [ pkgs.lib.sourceTypes.binaryNativeCode ];
+        }
+      ))
+      {
+        x86_64-darwin =
+          let
+            pkgs = nixpkgs.legacyPackages.x86_64-darwin.extend cl-nix-lite.overlays.default;
+            lpl = pkgs.lispPackagesLite;
+          in {
+            bclm = pkgs.stdenv.mkDerivation {
+              name = "bclm";
+              # There’s a copy of this binary included locally en cas de coup dur
+              src = pkgs.fetchzip {
+                url = "https://github.com/zackelia/bclm/releases/download/v0.0.4/bclm.zip";
+                hash = "sha256-3sQhszO+MRLGF5/dm1mFXQZu/MxK3nw68HTpc3cEBOA=";
+              };
+              installPhase = ''
+                mkdir -p $out/bin/
+                cp bclm $out/bin/
+              '';
+              dontFixup = true;
+              meta = {
+                platforms = [ "x86_64-darwin" ];
+                license = pkgs.lib.licenses.mit;
+                sourceProvenance = [ pkgs.lib.sourceTypes.binaryNativeCode ];
+                downloadPage = "https://github.com/zackelia/bclm/releases";
+                mainProgram = "bclm";
+              };
+            };
+            xbar-battery-plugin = let
+              bclm = pkgs.lib.getExe self.packages.x86_64-darwin.bclm;
+            in with lpl; lispScript {
+              name = "battery.30s.lisp";
+              src = ./battery.30s.lisp;
+              dependencies = [
+                arrow-macros
+                cl-interpol
+                inferior-shell
+                trivia
+              ];
+              inherit bclm;
+              passthru.sudo-binaries = [ bclm ];
+              postInstall = ''
+                export self="$out/bin/$name"
+                substituteAllInPlace "$self"
+              '';
             };
           };
-          clamp-smc-charging = pkgs.writeShellApplication {
-            name = "clamp-smc-charging";
-            text = builtins.readFile ./clamp-smc-charging;
-            runtimeInputs = [ self.packages.aarch64-darwin.smc ];
-            # pmset
-            meta.platforms = [ "aarch64-darwin" ];
+        aarch64-darwin =
+          let
+            pkgs = nixpkgs.legacyPackages.aarch64-darwin.extend cl-nix-lite.overlays.default;
+            lpl = pkgs.lispPackagesLite;
+          in {
+            smc = pkgs.stdenvNoCC.mkDerivation {
+              name = "smc";
+              dontUnpack = true;
+              dontPatch = true;
+              # I kinda forgot where I got this binary...?
+              installPhase = ''
+                mkdir -p $out/bin
+                cp ${./smc} $out/bin/smc
+              '';
+              meta = {
+                mainProgram = "smc";
+                platforms = [ "aarch64-darwin" ];
+                sourceProvenance = [ pkgs.lib.sourceTypes.binaryNativeCode ];
+              };
+            };
+            clamp-smc-charging = pkgs.writeShellApplication {
+              name = "clamp-smc-charging";
+              text = builtins.readFile ./clamp-smc-charging;
+              runtimeInputs = [ self.packages.aarch64-darwin.smc ];
+              # pmset
+              meta.platforms = [ "aarch64-darwin" ];
+            };
+            xbar-battery-plugin = let
+              smc = pkgs.lib.getExe self.packages.aarch64-darwin.smc;
+              smc_on = pkgs.writeShellScript "smc_on" ''
+                exec ${smc} -k CH0C -w 00
+              '';
+              smc_off = pkgs.writeShellScript "smc_off" ''
+                exec ${smc} -k CH0C -w 01
+              '';
+            in with lpl; lispScript {
+              name = "control-smc.1m.lisp";
+              src = ./control-smc.1m.lisp;
+              dependencies = [
+                cl-interpol
+                cl-ppcre
+                inferior-shell
+                trivia
+              ];
+              inherit smc smc_on smc_off;
+              passthru.sudo-binaries = [ smc_on smc_off ];
+              postInstall = ''
+                export self="$out/bin/$name"
+                substituteAllInPlace "$self"
+              '';
+            };
           };
-          xbar-battery-plugin = let
-            smc = pkgs.lib.getExe self.packages.aarch64-darwin.smc;
-            smc_on = pkgs.writeShellScript "smc_on" ''
-              exec ${smc} -k CH0C -w 00
-            '';
-            smc_off = pkgs.writeShellScript "smc_off" ''
-              exec ${smc} -k CH0C -w 01
-            '';
-          in with lpl; lispScript {
-            name = "control-smc.1m.lisp";
-            src = ./control-smc.1m.lisp;
-            dependencies = [
-              cl-interpol
-              cl-ppcre
-              inferior-shell
-              trivia
-            ];
-            inherit smc smc_on smc_off;
-            passthru.sudo-binaries = [ smc_on smc_off ];
-            postInstall = ''
-              export self="$out/bin/$name"
-              substituteAllInPlace "$self"
-            '';
-          };
-        };
-    };
+      }
+    ];
     lib = {
       # Wrap a binary in a trampoline script that gets envvars by running a
       # command. Use this with a key store like keychain or 1p to transparently get
