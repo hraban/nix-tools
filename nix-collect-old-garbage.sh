@@ -35,7 +35,7 @@ sqlite3 "$db" <<SQL | xargs -r -n 1 $dryrun ln -fs
 select path
 from validpaths
 where registrationTime > (unixepoch() - $expiry_secs)
-and deriver is not null
+and path not like '%.drv'
 SQL
 
 # Discard
@@ -44,7 +44,7 @@ sqlite3 "$db" <<SQL | xargs -r -n 1 basename | xargs -r $dryrun rm -f
 select path
 from validpaths
 where registrationTime < (unixepoch() - $expiry_secs)
-and deriver is not null
+and path not like '%.drv'
 SQL
 
 $dryrun nix-collect-garbage --delete-older-than "${expiry_days}d"
