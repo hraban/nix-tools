@@ -2,6 +2,10 @@
 
 # Use this in CI
 
+set -eu -o pipefail
+
+export NIXPKGS_ALLOW_UNFREE=1
+
 nix-instantiate  --json --eval --expr '
   let
 	p = import <nixpkgs> {};
@@ -11,5 +15,5 @@ nix-instantiate  --json --eval --expr '
 jq -r | \
 jq -r ".[]" | \
 while read prog ; do
-  nix build --no-link --print-build-logs  ".#$prog"
+  nix build --impure --no-link --print-build-logs  ".#$prog"
 done
