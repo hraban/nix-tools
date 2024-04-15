@@ -213,6 +213,21 @@
           '';
         };
       };
+      # If you use this you’re crazy
+      nix-collect-old-garbage = { lib, pkgs, config, ... }: {
+        systemd.nix-collect-old-garbage = {
+          serviceConfig = {
+            ProgramArguments = [
+              (lib.getExe self.packages.${pkgs.system}.nix-collect-old-garbage)
+            ];
+            RunAtLoad = true;
+            StartCalendarInterval = [ {
+              Hour = 11;
+              Minute = 11;
+            } ];
+          };
+        };
+      };
     };
     # Jesus what a mess.
     packages = recursiveMergeAttrs [
@@ -341,6 +356,14 @@
       (nixpkgs.lib.genAttrs (import systems) (system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
+        aws-1password = pkgs.writeShellApplication {
+          runtimeInputs = with pkgs; [ _1password awscli ];
+          text = builtins.readFile ./aws-1password.sh;
+          name = "aws-1p";
+          derivationArgs = {
+            meta.license = pkgs.lib.licenses.agpl3Only;
+          };
+        };
         # Like nix-collect-garbage --delete-older-than 30d, but doesn’t delete
         # anything that was _added_ to the store in the last 30 days. Creates a
         # fresh GC root for those paths in /nix/var/nix/gcroots/rotating, from
