@@ -31,7 +31,7 @@ $dryrun cd "$d"
 
 expiry_secs=$((60 * 60 * 24 * expiry_days))
 # Keep
-sqlite3 "$db" <<SQL | xargs -r -n 1 $dryrun ln -fs
+sqlite3 "$db" <<SQL | while read -r f; do if [[ ! -e "${f##*/}" ]]; then $dryrun ln -fs "$f"; fi; done
 select path
 from validpaths
 where registrationTime > (unixepoch() - $expiry_secs)
