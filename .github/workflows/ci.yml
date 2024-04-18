@@ -23,3 +23,10 @@ jobs:
     - uses: DeterminateSystems/magic-nix-cache-action@main
     - name: Flakes
       run: ./build-all.sh
+
+  nocommit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nobssoftware/nocommit@v1
+        name: nocommit
