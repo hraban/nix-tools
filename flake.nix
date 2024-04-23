@@ -356,14 +356,28 @@
       (nixpkgs.lib.genAttrs (import systems) (system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
-        aws-1password = pkgs.writeShellApplication {
-          runtimeInputs = with pkgs; [ _1password awscli ];
+        # This relies on an unfree package. If you import this in a flake for
+        # nixos or nix-darwin you can do this:
+        #
+        #     environment.systemPackages = [
+        #       (nix-tools.packages.${pkgs.system}.aws-1password.override {
+        #         inherit (pkgs) _1password;
+        #       })
+        #     ];
+        #     nixpkgs.config.allowUnfree = true;
+        #
+        aws-1password = pkgs.callPackage ({
+          writeShellApplication
+        , _1password
+        , awscli
+        }: writeShellApplication {
+          runtimeInputs = [ _1password awscli ];
           text = builtins.readFile ./aws-1password.sh;
           name = "aws-1p";
           derivationArgs = {
             meta.license = pkgs.lib.licenses.agpl3Only;
           };
-        };
+        }) {};
         # Like nix-collect-garbage --delete-older-than 30d, but doesn’t delete
         # anything that was _added_ to the store in the last 30 days. Creates a
         # fresh GC root for those paths in /nix/var/nix/gcroots/rotating, from
