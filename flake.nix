@@ -30,6 +30,10 @@
   , systems
   , ...
   }: let
+    darwinWait4Nix = exec: [
+      "/bin/sh" "-c"
+      "/bin/wait4path /nix/store &amp;&amp; ${exec}"
+    ];
     recursiveMergeAttrs = builtins.foldl' nixpkgs.lib.recursiveUpdate {};
   in {
     # Module to allow darwin hosts to get the timezone name as a string without
@@ -116,11 +120,11 @@
                 serviceConfig = {
                   RunAtLoad = true;
                   StartInterval = 60;
-                  ProgramArguments = [
+                  ProgramArguments = darwinWait4Nix (lib.escapeShellArgs [
                     (lib.getExe self.packages.${pkgs.system}.clamp-smc-charging)
-                    (builtins.toString cfg.clamp-service.min)
-                    (builtins.toString cfg.clamp-service.max)
-                  ];
+                    cfg.clamp-service.min
+                    cfg.clamp-service.max
+                  ]);
                 };
               };
             };
@@ -152,9 +156,7 @@
       nix-collect-old-garbage = { lib, pkgs, config, ... }: {
         launchd.daemons.nix-collect-old-garbage = {
           serviceConfig = {
-            ProgramArguments = [
-              (lib.getExe self.packages.${pkgs.system}.nix-collect-old-garbage)
-            ];
+            ProgramArguments = darwinWait4Nix (lib.getExe self.packages.${pkgs.system}.nix-collect-old-garbage);
             RunAtLoad = true;
             StartCalendarInterval = [ {
               Hour = 11;
