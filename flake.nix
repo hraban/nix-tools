@@ -408,21 +408,29 @@
       , _1password ? {}
       , pkgs
       }: with pkgs; let
-        env' = env // lib.mapAttrs (_: value: "${lib.getExe pkgs._1password} read ${lib.escapeShellArg value}") _1password;
+        # Special case for 1p: instead of reading every secret with ‘op read’,
+        # substitute them all once using ‘op run’. This requires fewer calls.
+        exports1p = lib.mapAttrsToList (name: value: ''export ${name}=${lib.escapeShellArg value}'') _1password;
         # Separate line for reading the variable and exporting it as an envvar
         # because that’s required to make bash detect failure of the command
         # substitution and bubble it up to the script itself for set -e to work as
         # intended.
-        exports = lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: ''
+        exportsRest = lib.mapAttrsToList (name: value: ''
           ${name}="$(${value})"
           export ${name}
-        '') env');
-      in writeScriptBin name ''
+        '') env;
+        exports = lib.concatStringsSep "\n" (exports1p ++ exportsRest);
+      in writeScriptBin name (''
         #! ${runtimeShell}
         set -euo pipefail
         ${exports}
-        exec ${lib.escapeShellArg (lib.getExe drv)} "$@"
-      '';
+      '' + (
+        if _1password == {}
+        then ''
+          exec ${lib.escapeShellArg (lib.getExe drv)} "$@"
+        '' else ''
+          exec ${lib.getExe pkgs._1password} run -- ${lib.escapeShellArg (lib.getExe drv)} "$@"
+        ''));
     };
   };
 }
