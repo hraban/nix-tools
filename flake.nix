@@ -20,6 +20,7 @@
       url = "flake-utils";
       inputs.systems.follows = "systems";
     };
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   };
 
   outputs = {
@@ -307,30 +308,15 @@
             pkgs = nixpkgs.legacyPackages.aarch64-darwin.extend cl-nix-lite.overlays.default;
             lpl = pkgs.lispPackagesLite;
           in {
-            smc = pkgs.stdenvNoCC.mkDerivation {
-              name = "smc";
-              dontUnpack = true;
-              dontPatch = true;
-              # I kinda forgot where I got this binary...?
-              installPhase = ''
-                mkdir -p $out/bin
-                cp ${./smc} $out/bin/smc
-              '';
-              meta = {
-                mainProgram = "smc";
-                platforms = [ "aarch64-darwin" ];
-                sourceProvenance = [ pkgs.lib.sourceTypes.binaryNativeCode ];
-              };
-            };
             clamp-smc-charging = pkgs.writeShellApplication {
               name = "clamp-smc-charging";
               text = builtins.readFile ./clamp-smc-charging;
-              runtimeInputs = [ self.packages.aarch64-darwin.smc ];
+              runtimeInputs = [ pkgs.smc-fuzzer ];
               # pmset
               meta.platforms = [ "aarch64-darwin" ];
             };
             xbar-battery-plugin = let
-              smc = pkgs.lib.getExe self.packages.aarch64-darwin.smc;
+              smc = pkgs.lib.getExe pkgs.smc-fuzzer;
               smc_on = pkgs.writeShellScript "smc_on" ''
                 exec ${smc} -k CH0C -w 00
               '';
