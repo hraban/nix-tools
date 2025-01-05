@@ -1,6 +1,6 @@
-# Copyright © 2023–2024 Hraban Luyat
+# Copyright © Hraban Luyat
 #
-# Licensed under the AGPL, v3 only.  See the LICENSE file.
+# Licensed under the AGPLv3-only.  See README for years and terms.
 
 # Don’t use this.
 
