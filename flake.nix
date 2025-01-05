@@ -185,7 +185,7 @@
           text = builtins.readFile ./clamp-smc-charging;
           runtimeInputs = [ pkgs.smc-fuzzer ];
           # pmset
-          meta.platforms = [ "aarch64-darwin" ];
+          meta.platforms = [ systemNames.aarch64-darwin ];
         };
         xbar-battery-plugin = let
           smc = pkgs.lib.getExe pkgs.smc-fuzzer;
