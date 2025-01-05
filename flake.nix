@@ -84,19 +84,14 @@
       };
     };
     perSystem = { system, pkgs, lib, ... }: {
+      _module.args.pkgs = import inputs.nixpkgs {
+        inherit system;
+        # For 1password
+        config.allowUnfree = true;
+      };
       packages = let
         lpl = (pkgs.extend cl-nix-lite.overlays.default).lispPackagesLite;
       in {
-        # This relies on an unfree package. If you import this in a flake for
-        # nixos or nix-darwin you can do this:
-        #
-        #     environment.systemPackages = [
-        #       (nix-tools.packages.${pkgs.system}.aws-1password.override {
-        #         inherit (pkgs) _1password;
-        #       })
-        #     ];
-        #     nixpkgs.config.allowUnfree = true;
-        #
         aws-1password = pkgs.callPackage ({
           writeShellApplication
         , _1password
