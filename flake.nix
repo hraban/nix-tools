@@ -117,6 +117,13 @@
             meta.license = pkgs.lib.licenses.agpl3Only;
           };
         };
+        nix-in-docker = pkgs.writeShellApplication {
+          name = "nix-in-docker";
+          text = builtins.readFile ./nix-in-docker.sh;
+          meta = {
+            homepage = "https://discourse.nixos.org/t/build-x86-64-linux-on-aarch64-darwin/35937/2?u=hraban";
+          };
+        };
       } // lib.optionalAttrs (builtins.elem system (with systemNames; [ x86_64-darwin aarch64-darwin ])) {
         # Darwin-only because of ‘say’
         alarm = with lpl; lispScript {
