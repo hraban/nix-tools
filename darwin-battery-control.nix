@@ -2,7 +2,9 @@
 #
 # Licensed under the AGPLv3-only.  See README for years and terms.
 
-let
+{ withSystem }:
+
+{ lib, pkgs, config, ... }: let
   clamp-service = { lib, ... }: {
     options = with lib; with types; {
       enable = mkOption {
@@ -20,6 +22,10 @@ let
         default = 80;
         description = "Highest permissible charge: above this, charging is disabled";
       };
+      package = mkOption {
+        type = package;
+        default = withSystem pkgs.system ({ config, ... }: config.packages.clamp-smc-charging);
+      };
     };
   };
   xbar-plugin = { lib, ... }: {
@@ -29,9 +35,12 @@ let
         default = false;
         description = "Install a charging toggle in xbar for all users";
       };
+      package = mkOption {
+        type = package;
+        default = withSystem pkgs.system ({ config, ... }: config.packages.xbar-battery-plugin);
+      };
     };
   };
-in { lib, pkgs, config, ... }: let
   cfg = config.battery-control;
 in {
   options = with lib; with types; {
@@ -54,13 +63,15 @@ in {
         assertion = pkgs.stdenv.system == "aarch64-darwin";
         message = "The SMC can only be controlled on aarch64-darwin";
       } ];
-      launchd.daemons = {
+      launchd.daemons = let
+        wait4nix = exec: pkgs.callPackage ./darwin-wait-4-nix.nix { inherit exec; };
+      in {
         poll-smc-charging = {
           serviceConfig = {
             RunAtLoad = true;
             StartInterval = 60;
-            ProgramArguments = darwinWait4Nix (lib.escapeShellArgs [
-              (lib.getExe self.packages.${pkgs.system}.clamp-smc-charging)
+            ProgramArguments = wait4nix (lib.escapeShellArgs [
+              (lib.getExe cfg.clamp-service.package)
               cfg.clamp-service.min
               cfg.clamp-service.max
             ]);
@@ -68,13 +79,11 @@ in {
         };
       };
     })
-    (lib.mkIf cfg.xbar-plugin.enable (let
-      inherit (self.packages.${pkgs.system}) xbar-battery-plugin;
-    in {
+    (lib.mkIf cfg.xbar-plugin.enable {
       environment = {
         etc."sudoers.d/nix-tools-battery-control".text = pkgs.lib.concatMapStringsSep "\n" (bin: ''
           ALL ALL = NOPASSWD: ${bin}
-        '') xbar-battery-plugin.sudo-binaries;
+        '') cfg.xbar-plugin.package.sudo-binaries;
       };
       # Assume home-manager is used.
       home-manager.sharedModules = [ ({ ... }: {
@@ -82,12 +91,12 @@ in {
           # The easiest way to copy a binary whose name I don’t know, is to
           # just copy the entire directory recursively, because I know it’s
           # the only binary in there, anyway :)
-          source = "${xbar-battery-plugin}/bin/";
+          source = "${cfg.xbar-plugin.package}/bin/";
           target = "Library/Application Support/xbar/plugins/";
           recursive = true;
           executable = true;
         };
       }) ];
-    }))
+    })
   ];
 }

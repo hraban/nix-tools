@@ -2,10 +2,15 @@
 #
 # Licensed under the AGPLv3-only.  See README for years and terms.
 
-{ lib, pkgs, config, ... }: {
+{ withSystem }:
+
+{ lib, pkgs, config, ... }: let
+  wait4nix = exec: pkgs.callPackage ./darwin-wait-4-nix.nix { inherit exec; };
+  nixgco = withSystem pkgs.system ({ config, ... }: config.packages.nix-collect-old-garbage);
+in {
   launchd.daemons.nix-collect-old-garbage = {
     serviceConfig = {
-      ProgramArguments = darwinWait4Nix (lib.getExe self.packages.${pkgs.system}.nix-collect-old-garbage);
+      ProgramArguments = wait4nix (lib.getExe nixgco);
       RunAtLoad = true;
       StartCalendarInterval = [ {
         Hour = 11;

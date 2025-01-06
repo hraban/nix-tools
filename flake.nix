@@ -25,11 +25,7 @@
   }@inputs: flake-parts.lib.mkFlake { inherit inputs; } (let
     # Avoid typos
     systemNames = flake-utils.lib.system;
-    darwinWait4Nix = exec: [
-      "/bin/sh" "-c"
-      "/bin/wait4path /nix/store &amp;&amp; ${exec}"
-    ];
-  in {
+  in { withSystem, flake-parts-lib, ... }: {
     systems = import systems;
     flake = {
       darwinModules = {
@@ -38,8 +34,12 @@
         # affects different parts of the system and I want all that code grouped
         # together.
         get-timezone = import ./darwin-get-timezone.nix;
-        battery-control = import ./darwin-battery-control.nix;
-        nix-collect-old-garbage = import ./darwin-gc-old.nix;
+        battery-control = flake-parts-lib.importApply ./darwin-battery-control.nix {
+          inherit withSystem;
+        };
+        nix-collect-old-garbage = flake-parts-lib.importApply ./darwin-gc-old.nix {
+          inherit withSystem;
+        };
       };
       nixosModules = {
         digitaloceanUserdataSecrets = import ./nixos-do-user-secrets.nix;
