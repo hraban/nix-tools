@@ -79,7 +79,7 @@
           then ''
             exec ${lib.escapeShellArg (lib.getExe drv)} "$@"
           '' else ''
-            exec ${lib.getExe pkgs._1password} run -- ${lib.escapeShellArg (lib.getExe drv)} "$@"
+            exec ${lib.getExe pkgs._1password-cli} run -- ${lib.escapeShellArg (lib.getExe drv)} "$@"
           ''));
       };
     };
@@ -94,10 +94,10 @@
       in {
         aws-1password = pkgs.callPackage ({
           writeShellApplication
-        , _1password
+        , _1password-cli
         , awscli
         }: writeShellApplication {
-          runtimeInputs = [ _1password awscli ];
+          runtimeInputs = [ _1password-cli awscli ];
           text = builtins.readFile ./aws-1password.sh;
           name = "aws-1p";
           derivationArgs = {
