@@ -123,56 +123,35 @@
               let
                 lpl = (pkgs.extend cl-nix-lite.overlays.default).lispPackagesLite;
               in
-              {
-                aws-1password = pkgs.callPackage (
-                  {
-                    writeShellApplication,
-                    _1password-cli,
-                    awscli,
-                  }:
-                  writeShellApplication {
-                    runtimeInputs = [
-                      _1password-cli
-                      awscli
-                    ];
-                    text = builtins.readFile ./aws-1password.sh;
-                    name = "aws-1p";
-                    derivationArgs = {
-                      meta.license = pkgs.lib.licenses.agpl3Only;
+              lib.optionalAttrs
+                (builtins.elem system (
+                  with systemNames;
+                  [
+                    x86_64-darwin
+                    aarch64-darwin
+                  ]
+                ))
+                {
+                  # Darwin-only because of ‘say’
+                  alarm =
+                    with lpl;
+                    lispScript {
+                      name = "alarm";
+                      src = ./alarm.lisp;
+                      dependencies = [
+                        arrow-macros
+                        f-underscore
+                        inferior-shell
+                        local-time
+                        trivia
+                        lpl."trivia.ppcre"
+                      ];
+                      installCheckPhase = ''
+                        $out/bin/alarm --help
+                      '';
+                      doInstallCheck = true;
                     };
-                  }
-                ) { };
-              }
-              //
-                lib.optionalAttrs
-                  (builtins.elem system (
-                    with systemNames;
-                    [
-                      x86_64-darwin
-                      aarch64-darwin
-                    ]
-                  ))
-                  {
-                    # Darwin-only because of ‘say’
-                    alarm =
-                      with lpl;
-                      lispScript {
-                        name = "alarm";
-                        src = ./alarm.lisp;
-                        dependencies = [
-                          arrow-macros
-                          f-underscore
-                          inferior-shell
-                          local-time
-                          trivia
-                          lpl."trivia.ppcre"
-                        ];
-                        installCheckPhase = ''
-                          $out/bin/alarm --help
-                        '';
-                        doInstallCheck = true;
-                      };
-                  }
+                }
               // lib.optionalAttrs (system == systemNames.x86_64-darwin) {
                 bclm = pkgs.stdenv.mkDerivation {
                   name = "bclm";
