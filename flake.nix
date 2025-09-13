@@ -153,26 +153,6 @@
                     };
                 }
               // lib.optionalAttrs (system == systemNames.x86_64-darwin) {
-                bclm = pkgs.stdenv.mkDerivation {
-                  name = "bclm";
-                  # There’s a copy of this binary included locally en cas de coup dur
-                  src = pkgs.fetchzip {
-                    url = "https://github.com/zackelia/bclm/releases/download/v0.0.4/bclm.zip";
-                    hash = "sha256-3sQhszO+MRLGF5/dm1mFXQZu/MxK3nw68HTpc3cEBOA=";
-                  };
-                  installPhase = ''
-                    mkdir -p $out/bin/
-                    cp bclm $out/bin/
-                  '';
-                  dontFixup = true;
-                  meta = {
-                    platforms = [ "x86_64-darwin" ];
-                    license = pkgs.lib.licenses.mit;
-                    sourceProvenance = [ pkgs.lib.sourceTypes.binaryNativeCode ];
-                    downloadPage = "https://github.com/zackelia/bclm/releases";
-                    mainProgram = "bclm";
-                  };
-                };
                 xbar-battery-plugin =
                   let
                     bclm = pkgs.lib.getExe self.packages.x86_64-darwin.bclm;
@@ -234,10 +214,12 @@
                     '';
                   };
               }
-              // lib.packagesFromDirectoryRecursive {
-                inherit (pkgs) callPackage;
-                directory = ./packages;
-              };
+              // lib.filterAttrs (_: lib.meta.availableOn { inherit system; }) (
+                lib.packagesFromDirectoryRecursive {
+                  inherit (pkgs) callPackage;
+                  directory = ./packages;
+                }
+              );
           };
       }
     );
