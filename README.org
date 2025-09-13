@@ -33,7 +33,6 @@ Example:
           # Now you can configure the actual module:
           ({ pkgs, ... }: {
             battery-control = {
-              # (aarch64 only)
               # Use a clamping service to automatically turn charging...
               clamp-service = {
                 enable = true;
@@ -42,11 +41,9 @@ Example:
                 # "Charging off" means "maintain current level using power
                 # supply", which is what you normally experience at 100%.
               };
-              # Enable an xbar plugin to control the battery. On x86 this uses
-              # BCLM and lets you select a “target charge” of between 50–100%,
-              # while on aarch64 it provides a binary ON/OFF switch for
-              # charging.  Requires xbar installed, of course, but also
-              # home-manager.
+              # Enable an xbar plugin to control the battery.  Provides a binary
+              # ON/OFF switch for charging.  Requires xbar installed, of course,
+              # but also home-manager.
               xbar-plugin.enable = true;
             };
           })
