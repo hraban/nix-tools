@@ -153,15 +153,6 @@
                       doInstallCheck = true;
                     };
                 }
-              // lib.optionalAttrs (system == systemNames.aarch64-darwin) {
-                clamp-smc-charging = pkgs.writeShellApplication {
-                  name = "clamp-smc-charging";
-                  text = builtins.readFile ./clamp-smc-charging;
-                  runtimeInputs = [ pkgs.smc-fuzzer ];
-                  # pmset
-                  meta.platforms = [ systemNames.aarch64-darwin ];
-                };
-              }
               // (
                 let
                   systemMatch = lib.meta.availableOn { inherit system; };
