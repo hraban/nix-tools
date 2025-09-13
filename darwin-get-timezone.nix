@@ -11,11 +11,14 @@ let
   get-timezone = pkgs.writeShellScriptBin "get-timezone" ''
     sudo ${get-timezone-su}/bin/get-timezone-su
   '';
-in {
-  assertions = [ {
-    assertion = pkgs.stdenv.isDarwin;
-    message = "Only available on Darwin";
-  } ];
+in
+{
+  assertions = [
+    {
+      assertion = pkgs.stdenv.isDarwin;
+      message = "Only available on Darwin";
+    }
+  ];
   # This is harmless and honestly it’s a darwin bug that you need admin
   # rights to run this.
   environment = {

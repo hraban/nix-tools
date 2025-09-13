@@ -1,4 +1,5 @@
-{ config, lib, ... }: {
+{ config, lib, ... }:
+{
   options = {
     hly.darwin-linux-builder = {
       enable = lib.mkEnableOption "Enable the linux builder";
@@ -17,14 +18,12 @@
       default = null;
     };
   };
-  config = let
-    cfg = config.hly.darwin-linux-builder;
-  in lib.mkMerge [
-    {
-      nix.linux-builder.enable = cfg.enable;
-    }
-    (lib.mkIf cfg.applyCustomizations {
-      nix.linux-builder = cfg.opts;
-    })
-  ];
+  config =
+    let
+      cfg = config.hly.darwin-linux-builder;
+    in
+    lib.mkMerge [
+      { nix.linux-builder.enable = cfg.enable; }
+      (lib.mkIf cfg.applyCustomizations { nix.linux-builder = cfg.opts; })
+    ];
 }
