@@ -29,11 +29,24 @@
       let
         # Avoid typos
         systemNames = flake-utils.lib.system;
+        # flake.parts module to build all packages in nix flake check
+        checkBuildPackagesMod =
+          { lib, ... }:
+          {
+            perSystem =
+              { self', ... }:
+              {
+                checks = lib.mapAttrs' (n: lib.nameValuePair "build-${n}") self'.packages;
+              };
+          };
       in
       { withSystem, flake-parts-lib, ... }:
       {
         systems = import systems;
-        imports = [ inputs.treefmt-nix.flakeModule ];
+        imports = [
+          inputs.treefmt-nix.flakeModule
+          checkBuildPackagesMod
+        ];
         flake = {
           darwinModules = {
             # Module to allow darwin hosts to get the timezone name as a string
@@ -49,6 +62,7 @@
             digitaloceanUserdataSecrets = import ./nixos-do-user-secrets.nix;
             nix-collect-old-garbage = import ./nixos-gc-old.nix;
           };
+          flakeModules.checkBuildPackages = checkBuildPackagesMod;
           lib = {
             # Wrap a binary in a trampoline script that gets envvars by running a
             # command. Use this with a key store like keychain or 1p to
