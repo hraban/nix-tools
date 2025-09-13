@@ -111,6 +111,7 @@
               inherit system;
               # For 1password
               config.allowUnfree = true;
+              overlays = [ cl-nix-lite.overlays.default ];
             };
             treefmt = {
               projectRootFile = "flake.nix";
@@ -121,7 +122,7 @@
             };
             packages =
               let
-                lpl = (pkgs.extend cl-nix-lite.overlays.default).lispPackagesLite;
+                lpl = pkgs.lispPackagesLite;
               in
               lib.optionalAttrs
                 (builtins.elem system (
@@ -152,29 +153,6 @@
                       doInstallCheck = true;
                     };
                 }
-              // lib.optionalAttrs (system == systemNames.x86_64-darwin) {
-                xbar-battery-plugin =
-                  let
-                    bclm = pkgs.lib.getExe self.packages.x86_64-darwin.bclm;
-                  in
-                  with lpl;
-                  lispScript {
-                    name = "battery.30s.lisp";
-                    src = ./battery.30s.lisp;
-                    dependencies = [
-                      arrow-macros
-                      cl-interpol
-                      inferior-shell
-                      trivia
-                    ];
-                    inherit bclm;
-                    passthru.sudo-binaries = [ bclm ];
-                    postInstall = ''
-                      export self="$out/bin/$name"
-                      substituteAllInPlace "$self"
-                    '';
-                  };
-              }
               // lib.optionalAttrs (system == systemNames.aarch64-darwin) {
                 clamp-smc-charging = pkgs.writeShellApplication {
                   name = "clamp-smc-charging";
@@ -183,42 +161,18 @@
                   # pmset
                   meta.platforms = [ systemNames.aarch64-darwin ];
                 };
-                xbar-battery-plugin =
-                  let
-                    smc = pkgs.lib.getExe pkgs.smc-fuzzer;
-                    smc_on = pkgs.writeShellScript "smc_on" ''
-                      exec ${smc} -k CH0C -w 00
-                    '';
-                    smc_off = pkgs.writeShellScript "smc_off" ''
-                      exec ${smc} -k CH0C -w 01
-                    '';
-                  in
-                  with lpl;
-                  lispScript {
-                    name = "control-smc.1m.lisp";
-                    src = ./control-smc.1m.lisp;
-                    dependencies = [
-                      cl-interpol
-                      cl-ppcre
-                      inferior-shell
-                      trivia
-                    ];
-                    inherit smc smc_on smc_off;
-                    passthru.sudo-binaries = [
-                      smc_on
-                      smc_off
-                    ];
-                    postInstall = ''
-                      export self="$out/bin/$name"
-                      substituteAllInPlace "$self"
-                    '';
-                  };
               }
-              // lib.filterAttrs (_: lib.meta.availableOn { inherit system; }) (
-                lib.packagesFromDirectoryRecursive {
-                  inherit (pkgs) callPackage;
-                  directory = ./packages;
-                }
+              // (
+                let
+                  systemMatch = lib.meta.availableOn { inherit system; };
+                  keep = drv: (lib.isDerivation drv) && (systemMatch drv);
+                in
+                lib.filterAttrs (_: keep) (
+                  lib.packagesFromDirectoryRecursive {
+                    inherit (pkgs) callPackage newScope;
+                    directory = ./packages;
+                  }
+                )
               );
           };
       }
