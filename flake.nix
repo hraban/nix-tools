@@ -123,47 +123,14 @@
             packages =
               let
                 lpl = pkgs.lispPackagesLite;
+                systemMatch = lib.meta.availableOn { inherit system; };
+                keep = drv: (lib.isDerivation drv) && (systemMatch drv);
               in
-              lib.optionalAttrs
-                (builtins.elem system (
-                  with systemNames;
-                  [
-                    x86_64-darwin
-                    aarch64-darwin
-                  ]
-                ))
-                {
-                  # Darwin-only because of ‘say’
-                  alarm =
-                    with lpl;
-                    lispScript {
-                      name = "alarm";
-                      src = ./alarm.lisp;
-                      dependencies = [
-                        arrow-macros
-                        f-underscore
-                        inferior-shell
-                        local-time
-                        trivia
-                        lpl."trivia.ppcre"
-                      ];
-                      installCheckPhase = ''
-                        $out/bin/alarm --help
-                      '';
-                      doInstallCheck = true;
-                    };
+              lib.filterAttrs (_: keep) (
+                lib.packagesFromDirectoryRecursive {
+                  inherit (pkgs) callPackage newScope;
+                  directory = ./packages;
                 }
-              // (
-                let
-                  systemMatch = lib.meta.availableOn { inherit system; };
-                  keep = drv: (lib.isDerivation drv) && (systemMatch drv);
-                in
-                lib.filterAttrs (_: keep) (
-                  lib.packagesFromDirectoryRecursive {
-                    inherit (pkgs) callPackage newScope;
-                    directory = ./packages;
-                  }
-                )
               );
           };
       }
