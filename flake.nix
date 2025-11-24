@@ -64,20 +64,19 @@
           };
           flakeModules.checkBuildPackages = checkBuildPackagesMod;
           lib = {
-            # Wrap a binary in a trampoline script that gets envvars by running a
+            # Wrap a binary in a trampoline script that gets envvars by run/ning a
             # command. Use this with a key store like keychain or 1p to
             # transparently get secrets for an interactive command. Compare this to
             # a baked-in aws-vault exec.
             env-trampoline =
+              { lib, writeShellApplication }:
               {
                 drv,
                 name ? drv.name,
                 env ? { },
                 # Convenience wrapper for env which fetches keys from 1password
                 _1password ? { },
-                pkgs,
               }:
-              with pkgs;
               let
                 # Special case for 1p: instead of reading every secret with ‘op read’,
                 # substitute them all once using ‘op run’. This requires fewer calls.
@@ -94,23 +93,13 @@
                 '') env;
                 exports = lib.concatStringsSep "\n" (exports1p ++ exportsRest);
               in
-              writeScriptBin name (
-                ''
-                  #! ${runtimeShell}
-                  set -euo pipefail
+              writeShellApplication {
+                inherit name;
+                text = ''
                   ${exports}
-                ''
-                + (
-                  if _1password == { } then
-                    ''
-                      exec ${lib.escapeShellArg (lib.getExe drv)} "$@"
-                    ''
-                  else
-                    ''
-                      exec ${lib.getExe pkgs._1password-cli} run -- ${lib.escapeShellArg (lib.getExe drv)} "$@"
-                    ''
-                )
-              );
+                  exec ${lib.optionalString (_1password != { }) "op run --"} ${lib.getExe drv} "$@"
+                '';
+              };
           };
         };
         perSystem =
