@@ -2,11 +2,34 @@
 
 set -eu
 
+use_chte=false
+if smc -k CHTE -r | grep -q 'no data'; then
+	use_chte=true
+fi
+use_ch0c=false
+if smc -k CH0C -r | grep -q 'no data'; then
+	use_ch0c=true
+fi
+if ! $use_chte && ! $use_ch0c; then
+	>&2 echo "Couldn't detect which SM key to use"
+	exit 1
+fi
+
 min="$1"
 max="$2"
 BATT_PERCENT="$(pmset -g batt | tail -n1 | awk '{print $3}' | sed 's/%;//')"
 if [ "$BATT_PERCENT" -ge "$max" ]; then
-	smc -k CH0C -w 01
+	if $use_chte; then
+		smc -k CHTE -w 01000000
+	fi
+	if $use_ch0c; then
+		smc -k CH0C -w 01
+	fi
 elif [ "$BATT_PERCENT" -le "$min" ]; then
-	smc -k CH0C -w 00
+	if $use_chte; then
+		smc -k CHTE -w 00000000
+	fi
+	if $use_ch0c; then
+		smc -k CH0C -w 00
+	fi
 fi
