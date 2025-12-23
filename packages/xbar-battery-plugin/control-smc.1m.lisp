@@ -56,13 +56,16 @@
 (defun smc-read ()
   (sh/ss `(,*smc* #\k "CHTE" #\r)))
 
-(defun charging-state ()
+(defun parse-smc-val (smc-val)
   (or
-   (cl-ppcre:register-groups-bind (n) ("\\(bytes ([\\d ]+)\\)" (smc-read))
-                                  (trivia:match n
-                                    ("00 00 00 00" "⚡")
-                                    ("01 00 00 00" "🔌")))
+   (cl-ppcre:register-groups-bind (n) ("\\(bytes ([\\d ]+)\\)" smc-val)
+     (trivia:match n
+       ("00 00 00 00" "⚡")
+       ("01 00 00 00" "🔌")))
    "❓"))
+
+(defun charging-state ()
+  (parse-smc-val (smc-read)))
 
 (defun println (s)
   (format T "~A~%" s))
