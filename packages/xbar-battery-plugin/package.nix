@@ -8,10 +8,10 @@
 let
   smc = lib.getExe smc-fuzzer;
   smc_on = writeShellScript "smc_on" ''
-    exec ${smc} -k CH0C -w 00
+    exec ${smc} -k CHTE -w 00000000
   '';
   smc_off = writeShellScript "smc_off" ''
-    exec ${smc} -k CH0C -w 01
+    exec ${smc} -k CHTE -w 01000000
   '';
 in
 with lispPackagesLite;

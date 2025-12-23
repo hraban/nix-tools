@@ -54,14 +54,15 @@
   (apply #'sh `(,@args :output (:string :stripped t))))
 
 (defun smc-read ()
-  (sh/ss `(,*smc* #\k "CH0C" #\r)))
+  (sh/ss `(,*smc* #\k "CHTE" #\r)))
 
 (defun charging-state ()
-  (cl-ppcre:register-groups-bind (n) ("\\(bytes (\\d+)\\)" (smc-read))
-    (trivia:match n
-      ("00" "⚡")
-      ("01" "🔌")
-      (_    "❓"))))
+  (or
+   (cl-ppcre:register-groups-bind (n) ("\\(bytes ([\\d ]+)\\)" (smc-read))
+                                  (trivia:match n
+                                    ("00 00 00 00" "⚡")
+                                    ("01 00 00 00" "🔌")))
+   "❓"))
 
 (defun println (s)
   (format T "~A~%" s))
