@@ -3,11 +3,11 @@
 set -eu
 
 use_chte=false
-if smc -k CHTE -r | grep -q 'no data'; then
+if smc -k CHTE -r | grep -vq 'no data'; then
 	use_chte=true
 fi
 use_ch0c=false
-if smc -k CH0C -r | grep -q 'no data'; then
+if smc -k CH0C -r | grep -vq 'no data'; then
 	use_ch0c=true
 fi
 if ! $use_chte && ! $use_ch0c; then
