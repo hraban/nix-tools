@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
-set -eu
+set -euo pipefail
+${DEBUGSH+set -x}
 
 use_chte=false
 if smc -k CHTE -r | grep -vq 'no data'; then
