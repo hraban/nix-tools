@@ -49,7 +49,6 @@
             # affects different parts of the system and I want all that code grouped
             # together.
             get-timezone = import ./darwin-get-timezone.nix;
-            battery-control = flake-parts-lib.importApply ./darwin-battery-control.nix { inherit withSystem; };
             linux-builder-bootstrap = import ./darwin-bootstrap-builder.nix;
             nix-collect-old-garbage = flake-parts-lib.importApply ./darwin-gc-old.nix { inherit withSystem; };
           };
