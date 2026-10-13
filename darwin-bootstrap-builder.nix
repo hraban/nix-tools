@@ -1,5 +1,4 @@
-{ config, lib, ... }:
-{
+{ config, lib, ... }: {
   options = {
     hly.darwin-linux-builder = {
       enable = lib.mkEnableOption "Enable the linux builder";

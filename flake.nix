@@ -10,7 +10,7 @@
       url = "flake-utils";
       inputs.systems.follows = "systems";
     };
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
   };
@@ -30,18 +30,13 @@
         # Avoid typos
         systemNames = flake-utils.lib.system;
         # flake.parts module to build all packages in nix flake check
-        checkBuildPackagesMod =
-          { lib, ... }:
-          {
-            perSystem =
-              { self', ... }:
-              {
-                checks = lib.mapAttrs' (n: lib.nameValuePair "build-${n}") self'.packages;
-              };
+        checkBuildPackagesMod = { lib, ... }: {
+          perSystem = { self', ... }: {
+            checks = lib.mapAttrs' (n: lib.nameValuePair "build-${n}") self'.packages;
           };
+        };
       in
-      { withSystem, flake-parts-lib, ... }:
-      {
+      { withSystem, flake-parts-lib, ... }: {
         systems = import systems;
         imports = [
           inputs.treefmt-nix.flakeModule
@@ -81,7 +76,7 @@
                 # Special case for 1p: instead of reading every secret with ‘op read’,
                 # substitute them all once using ‘op run’. This requires fewer calls.
                 exports1p = lib.mapAttrsToList (
-                  name: value: ''export ${name}=${lib.escapeShellArg value}''
+                  name: value: "export ${name}=${lib.escapeShellArg value}"
                 ) _1password;
                 # Separate line for reading the variable and exporting it as an envvar
                 # because that’s required to make bash detect failure of the command

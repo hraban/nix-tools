@@ -11,52 +11,48 @@
   ...
 }:
 let
-  clamp-service =
-    { lib, ... }:
-    {
-      options =
-        with lib;
-        with types;
-        {
-          enable = mkOption {
-            type = bool;
-            default = false;
-            description = "Whether to enable a launch daemon to control the battery charge";
-          };
-          min = mkOption {
-            type = ints.between 0 100;
-            default = 50;
-            description = "Lowest permissible charge: under this, charging is enabled";
-          };
-          max = mkOption {
-            type = ints.between 0 100;
-            default = 80;
-            description = "Highest permissible charge: above this, charging is disabled";
-          };
-          package = mkOption {
-            type = package;
-            default = withSystem pkgs.system ({ config, ... }: config.packages.clamp-smc-charging);
-          };
+  clamp-service = { lib, ... }: {
+    options =
+      with lib;
+      with types;
+      {
+        enable = mkOption {
+          type = bool;
+          default = false;
+          description = "Whether to enable a launch daemon to control the battery charge";
         };
-    };
-  xbar-plugin =
-    { lib, ... }:
-    {
-      options =
-        with lib;
-        with types;
-        {
-          enable = mkOption {
-            type = bool;
-            default = false;
-            description = "Install a charging toggle in xbar for all users";
-          };
-          package = mkOption {
-            type = package;
-            default = withSystem pkgs.system ({ config, ... }: config.packages.xbar-battery-plugin);
-          };
+        min = mkOption {
+          type = ints.between 0 100;
+          default = 50;
+          description = "Lowest permissible charge: under this, charging is enabled";
         };
-    };
+        max = mkOption {
+          type = ints.between 0 100;
+          default = 80;
+          description = "Highest permissible charge: above this, charging is disabled";
+        };
+        package = mkOption {
+          type = package;
+          default = withSystem pkgs.system ({ config, ... }: config.packages.clamp-smc-charging);
+        };
+      };
+  };
+  xbar-plugin = { lib, ... }: {
+    options =
+      with lib;
+      with types;
+      {
+        enable = mkOption {
+          type = bool;
+          default = false;
+          description = "Install a charging toggle in xbar for all users";
+        };
+        package = mkOption {
+          type = package;
+          default = withSystem pkgs.system ({ config, ... }: config.packages.xbar-battery-plugin);
+        };
+      };
+  };
   cfg = config.battery-control;
 in
 {
@@ -113,20 +109,17 @@ in
       };
       # Assume home-manager is used.
       home-manager.sharedModules = [
-        (
-          { ... }:
-          {
-            home.file.xbar-battery-plugin = {
-              # The easiest way to copy a binary whose name I don’t know, is to
-              # just copy the entire directory recursively, because I know it’s
-              # the only binary in there, anyway :)
-              source = "${cfg.xbar-plugin.package}/bin/";
-              target = "Library/Application Support/xbar/plugins/";
-              recursive = true;
-              executable = true;
-            };
-          }
-        )
+        ({ ... }: {
+          home.file.xbar-battery-plugin = {
+            # The easiest way to copy a binary whose name I don’t know, is to
+            # just copy the entire directory recursively, because I know it’s
+            # the only binary in there, anyway :)
+            source = "${cfg.xbar-plugin.package}/bin/";
+            target = "Library/Application Support/xbar/plugins/";
+            recursive = true;
+            executable = true;
+          };
+        })
       ];
     })
   ];
