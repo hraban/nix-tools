@@ -1,9 +1,9 @@
-{ smc-fuzzer, writeShellApplication }:
+{ toggle-charging, writeShellApplication }:
 
 writeShellApplication {
   name = "clamp-smc-charging";
   text = builtins.readFile ./clamp-smc-charging;
-  runtimeInputs = [ smc-fuzzer ];
+  runtimeInputs = [ toggle-charging ];
   # pmset
   meta.platforms = [ "aarch64-darwin" ];
 }

@@ -39,9 +39,6 @@
 
 (named-readtables:in-readtable :interpol-syntax)
 
-(defvar *smc_off* "@smc_off@")
-(defvar *smc_on* "@smc_on@")
-(defvar *smc* "@smc@")
 (defvar *me* "@self@")
 
 (defun debugp ()
@@ -54,15 +51,13 @@
   (apply #'sh `(,@args :output (:string :stripped t))))
 
 (defun smc-read ()
-  (sh/ss `(,*smc* #\k "CHTE" #\r)))
+  (sh/ss '(toggle-charging)))
 
 (defun parse-smc-val (smc-val)
-  (or
-   (cl-ppcre:register-groups-bind (n) ("\\(bytes ([\\d ]+)\\)" smc-val)
-     (trivia:match n
-       ("00 00 00 00" "⚡")
-       ("01 00 00 00" "🔌")))
-   "❓"))
+  (trivia:match smc-val
+    ("on" "⚡")
+    ("off" "🔌")
+    (_ "❓")))
 
 (defun charging-state ()
   (parse-smc-val (smc-read)))
@@ -84,10 +79,10 @@
     (()
      (print-menu))
     ((list "on")
-     (sh `(sudo ,*smc_on*))
+     (sh '(sudo toggle-charging on))
      (print-menu))
     ((list "off")
-     (sh `(sudo ,*smc_off*))
+     (sh '(sudo toggle-charging off))
      (print-menu))))
 
 (main)
