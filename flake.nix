@@ -51,10 +51,12 @@
             get-timezone = import ./darwin-get-timezone.nix;
             linux-builder-bootstrap = import ./darwin-bootstrap-builder.nix;
             nix-collect-old-garbage = flake-parts-lib.importApply ./darwin-gc-old.nix { inherit withSystem; };
+            hly = import ./os/darwin.nix;
           };
           nixosModules = {
             digitaloceanUserdataSecrets = import ./nixos-do-user-secrets.nix;
             nix-collect-old-garbage = import ./nixos-gc-old.nix;
+            hly = import ./os/nixos.nix;
           };
           flakeModules.checkBuildPackages = checkBuildPackagesMod;
           lib = {
