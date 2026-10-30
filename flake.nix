@@ -11,6 +11,7 @@
       inputs.systems.follows = "systems";
     };
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    home-manager.url = "github:nix-community/home-manager";
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
   };
@@ -40,6 +41,7 @@
         systems = import systems;
         imports = [
           inputs.treefmt-nix.flakeModule
+          inputs.home-manager.flakeModules.home-manager
           checkBuildPackagesMod
         ];
         flake = {
@@ -51,13 +53,14 @@
             get-timezone = import ./darwin-get-timezone.nix;
             linux-builder-bootstrap = import ./darwin-bootstrap-builder.nix;
             nix-collect-old-garbage = flake-parts-lib.importApply ./darwin-gc-old.nix { inherit withSystem; };
-            hly = import ./os/darwin.nix;
+            hly = import ./os/darwin.nix { flake-inputs = inputs; };
           };
           nixosModules = {
             digitaloceanUserdataSecrets = import ./nixos-do-user-secrets.nix;
             nix-collect-old-garbage = import ./nixos-gc-old.nix;
-            hly = import ./os/nixos.nix;
+            hly = import ./os/nixos.nix { flake-inputs = inputs; };
           };
+          homeModules.hly = import ./home-manager;
           flakeModules.checkBuildPackages = checkBuildPackagesMod;
           lib = {
             # Wrap a binary in a trampoline script that gets envvars by run/ning a

@@ -77,7 +77,17 @@ let
           );
       };
     };
+  homeManager = {
+    home-manager = {
+      useGlobalPkgs = true;
+      useUserPackages = true;
+      sharedModules = [ ../home-manager ];
+    };
+  };
 in
 {
-  imports = [ nixpkgsPackages ];
+  imports = [
+    homeManager
+    nixpkgsPackages
+  ];
 }
