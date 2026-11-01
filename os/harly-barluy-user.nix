@@ -1,4 +1,7 @@
 # User account for Harly Barluy streamer
+#
+# Not actually generic; technically I should move some of this to a nixos only
+# dir.  Which would mean having a nixos dir in the first place...
 {
   config,
   lib,
@@ -6,9 +9,9 @@
   ...
 }:
 {
-  options.hly.hly-user = lib.mkEnableOption "hly user admin account on a VM";
+  options.hly.harly-barluy.user = lib.mkEnableOption "hly (Harly Barluy) user admin account on a VM";
 
-  config = lib.mkIf config.hly.hly-user {
+  config = lib.mkIf config.hly.harly-barluy.user {
     nix.settings.trusted-users = [ "hly" ];
     # Home-manager wants _some_ value for this, might as well set it to
     # whatever

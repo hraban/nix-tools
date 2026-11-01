@@ -3,7 +3,8 @@
 {
   imports = [
     ./home-manager.nix
-    ./hly-user.nix
+    ./harly-barluy-user.nix
+    ./harly-barluy-stream-vps.nix
     ./nixpkgs-packages.nix
   ];
 }
