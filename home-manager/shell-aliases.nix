@@ -3,7 +3,7 @@
     enable = lib.mkEnableOption "Enable my standard shell aliases";
     eshell-compatible = lib.mkOption {
       description = ''
-        The alises which are compatible with sh and eshell.
+        The aliases which are compatible with sh and eshell.
 
         Exported here purely as an idiosyncracy for my personal flake, where I
         use these to make eshell aliases.
