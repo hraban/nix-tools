@@ -12,10 +12,7 @@
     nixpkgs.config.allowUnfree = true;
     hly.harly-barluy.user = true;
     hly.packages.fromNixpkgs = true;
-    home-manager.users.hly = {
-      hly.hraban-vcs-author = true;
-      hly.shell-aliases.enable = true;
-    };
+    home-manager.users.hly.hly.harly-barluy-streamer = true;
     virtualisation.docker.enable = true;
     programs.mosh.enable = true;
     environment.systemPackages = with pkgs; [

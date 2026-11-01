@@ -11,7 +11,10 @@
       inputs.systems.follows = "systems";
     };
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    home-manager.url = "github:nix-community/home-manager";
+    home-manager = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
   };
@@ -60,7 +63,47 @@
             nix-collect-old-garbage = import ./nixos-gc-old.nix;
             hly = import ./os/nixos.nix { flake-inputs = inputs; };
           };
+          nixosConfigurations = {
+            # For local testing of the VPS config.  Example:
+            #
+            #   $ nix build .#nixosConfigurations.hly-mock-vps.config.system.build.toplevel
+            #
+            # And inspect the activation script and related files in result/
+            hly-mock-vps = inputs.nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              modules = [
+                {
+                  fileSystems."/" = {
+                    device = "/dev/null";
+                    fsType = "vfat";
+                  };
+                  boot.loader.grub.enable = false;
+                  hly.harly-barluy.vps = true;
+                }
+                self.nixosModules.hly
+              ];
+            };
+          };
           homeModules.hly = import ./home-manager;
+          homeConfigurations = {
+            # Like nixosConfigurations.hly-mock-vps but for the home manager config
+            #
+            # Usage:
+            #
+            #   $ nix run home-manager -- build --flake .#hly-mock-vps
+            hly-mock-vps = inputs.home-manager.lib.homeManagerConfiguration {
+              pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
+              modules = [
+                self.homeModules.hly
+                {
+                  home.username = "test";
+                  home.homeDirectory = "/";
+                  home.stateVersion = "26.05";
+                  hly.harly-barluy-streamer = true;
+                }
+              ];
+            };
+          };
           flakeModules.checkBuildPackages = checkBuildPackagesMod;
           lib = {
             # Wrap a binary in a trampoline script that gets envvars by run/ning a
