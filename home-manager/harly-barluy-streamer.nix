@@ -4,5 +4,6 @@
     hly.bash = true;
     hly.git.enable = true;
     hly.hraban-vcs-author = true;
+    hly.mercurial = true;
   };
 }
