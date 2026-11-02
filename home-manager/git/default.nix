@@ -13,8 +13,14 @@
     };
   };
   config = {
-    # Always export
-    hly.git.gitignore = ./gitignore-global;
+    # Export for reuse, even when module is disabled.  Copy to the store
+    # explicitly; doing just ‘./gitignore-global’ here (without toFile) also
+    # works, with flakes, but it keeps this value a reference to a path inside
+    # the flake source.  Copying to the store separately is a good habit to
+    # allow dependent derivations not to be dependent on the entire source tree
+    # just for this file.  In this case it doesn’t really matter, but it’s a
+    # good habit to get into.
+    hly.git.gitignore = builtins.toFile "gitignore-global" (builtins.readFile ./gitignore-global);
     programs.git = lib.mkIf config.hly.git.enable {
       enable = true;
       hooks = {
