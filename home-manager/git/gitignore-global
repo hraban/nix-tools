@@ -1,0 +1,54 @@
+*~
+.DS_Store
+.DS_store
+.*.sw[op]
+.sw[op]
+.python-version
+.ropeproject
+__pycache__
+
+\#*\#
+.\#*
+
+*NOCOMMIT*
+
+.idea
+
+node_modules
+
+# git am
+00*.patch
+# patch noise (don't ignore .rej to highlight patch fails in git status output)
+*.orig
+
+codeship.aes
+.mypy_cache
+
+.dir-locals-2.el
+
+# Emacs LSP noise
+.log
+
+yarn-error.log
+
+# Emacs Projectile: mark a subfolder as project root (useful for monorepo)
+.projectile
+
+# Nix
+result
+result-*
+.nixos-test-history
+
+# Common Lisp (SBCL & ABCL)
+*.fasl
+*.abcl
+
+.direnv
+
+# ruby
+.irb_history
+
+# cc -g debug symbols
+*.dSYM
+
+tsconfig.tsbuildinfo
