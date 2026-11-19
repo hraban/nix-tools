@@ -17,6 +17,10 @@
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -56,12 +60,24 @@
             get-timezone = import ./darwin-get-timezone.nix;
             linux-builder-bootstrap = import ./darwin-bootstrap-builder.nix;
             nix-collect-old-garbage = flake-parts-lib.importApply ./darwin-gc-old.nix { inherit withSystem; };
-            hly = import ./os/darwin.nix { flake-inputs = inputs; };
+            hly = {
+              imports = [
+                ./os/darwin.nix
+                inputs.home-manager.darwinModules.home-manager
+                { hly.flake-inputs = inputs; }
+              ];
+            };
           };
           nixosModules = {
             digitaloceanUserdataSecrets = import ./nixos-do-user-secrets.nix;
             nix-collect-old-garbage = import ./nixos-gc-old.nix;
-            hly = import ./os/nixos.nix { flake-inputs = inputs; };
+            hly = {
+              imports = [
+                ./os/nixos.nix
+                inputs.home-manager.nixosModules.home-manager
+                { hly.flake-inputs = inputs; }
+              ];
+            };
           };
           nixosConfigurations = {
             # For local testing of the VPS config.  Example:

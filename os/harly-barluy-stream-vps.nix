@@ -13,6 +13,7 @@
     lib.mkIf config.hly.harly-barluy.vps {
       nixpkgs.config.allowUnfree = true;
       hly.harly-barluy.user = true;
+      hly.packages.extra = true;
       hly.packages.fromNixpkgs = true;
       home-manager.users.hly.hly.harly-barluy-streamer = true;
       virtualisation.docker.enable = true;

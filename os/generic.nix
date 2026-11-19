@@ -2,9 +2,11 @@
 
 {
   imports = [
+    ./flake-inputs.nix
     ./home-manager.nix
     ./harly-barluy-user.nix
     ./harly-barluy-stream-vps.nix
-    ./nixpkgs-packages.nix
+    ./packages-extra.nix
+    ./packages-nixpkgs.nix
   ];
 }

@@ -1,6 +1,5 @@
-{ flake-inputs }: {
+{
   imports = [
-    flake-inputs.home-manager.darwinModules.home-manager
     ./generic.nix
     # Insane trick to allow os-specific module options without infinite
     # recursion.  lib.mkIf evaluates the entire thing regardless of whether the
