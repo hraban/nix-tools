@@ -20,7 +20,6 @@
       programs.mosh.enable = true;
       environment.systemPackages = with pkgs; [
         binutils
-        claude-code
         emacs
         file
         net-tools
