@@ -58,7 +58,7 @@
 
         # These go out of date so fast it makes sense to always fetch from nixpkgs-unstable.
         yt-dlp = "nix --experimental-features 'nix-command flakes' run https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#yt-dlp --";
-        claude = "NIXPKGS_ALLOW_UNFREE=1 nix --experimental-features 'nix-command flakes' run https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#claude-code --";
+        claude = "NIXPKGS_ALLOW_UNFREE=1 nix --experimental-features 'nix-command flakes' run --impure https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#claude-code --";
         codex = "nix run https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#codex --";
 
         # Emacs has built-ins for these and it doesn’t like an alias that
