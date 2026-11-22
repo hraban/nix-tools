@@ -1,5 +1,6 @@
 {
   imports = [
+    ./agents
     ./bash.nix
     ./emacs.nix
     ./git
