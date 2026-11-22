@@ -57,9 +57,9 @@
         spongebob = ''python3 -c '(lambda s: s.stdout.write("".join(map( lambda x: x[1].upper() if x[0]%2 else x[1].lower(), enumerate(s.stdin.read())))))(__import__("sys"))' '';
 
         # These go out of date so fast it makes sense to always fetch from nixpkgs-unstable.
-        yt-dlp = "nix --experimental-features 'nix-command flakes' run github:nixos/nixpkgs/nixpkgs-unstable#yt-dlp --";
-        claude = "NIXPKGS_ALLOW_UNFREE=1 nix --experimental-features 'nix-command flakes' run github:nixos/nixpkgs/nixpkgs-unstable#claude-code --";
-        codex = "nix run github:nixos/nixpkgs/nixpkgs-unstable#codex --";
+        yt-dlp = "nix --experimental-features 'nix-command flakes' run https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#yt-dlp --";
+        claude = "NIXPKGS_ALLOW_UNFREE=1 nix --experimental-features 'nix-command flakes' run https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#claude-code --";
+        codex = "nix run https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst#codex --";
 
         # Emacs has built-ins for these and it doesn’t like an alias that
         # automatically sets this flag, for some reason.  Figure it out later.
